@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-import pipeline
-import showman
+from core import pipeline
+from core import showman
 
 # Initiating a session
 
-init = fetch.init_session(fetch.chromium_linux, http2_enable=True)
+init = pipeline.init_session(pipeline.chromium_linux, http2_enable=True)
 base_url = 'https://www.boekwinkeltjes.nl'
 
 # Target URL
@@ -14,7 +14,7 @@ url = 'https://www.boekwinkeltjes.nl/w/list/'
 
 # Fetching the webiste
 
-website = fetch.fetch_website(init, url, 30)
+website = pipeline.fetch_website(init, url, 30)
 
 # Extraction logic begins here
 
@@ -23,7 +23,7 @@ def single_page():
 
     print()
 
-    parsed = fetch.parse_website(website.text)
+    parsed = pipeline.parse_website(website.text)
 
     table = parsed.find('table')
 
