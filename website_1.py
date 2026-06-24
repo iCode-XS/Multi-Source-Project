@@ -19,11 +19,11 @@ website = pipeline.fetch_website(init, url, 30)
 # Extraction logic begins here
 
 
-def single_page():
+def single_page(response_var):
 
     print()
 
-    parsed = pipeline.parse_website(website.text)
+    parsed = pipeline.parse_website(response_var)
 
     table = parsed.find('table')
 
@@ -70,8 +70,30 @@ def single_page():
         capture['Contact Source'] = base_url + contact_a if contact_a else 'N/A'
 
         showman.carriage_dict(capture, timeout=0.7)
-        
+
         print(f'\r{showman.MOVE_UP}{showman.CLEAR_LINE}')
 
 
-single_page()
+    next_page_sibling = parsed.find('i', class_='fa fa-arrow-right')
+    next_page_link = next_page_sibling.parent['href'] if next_page_sibling else None
+
+    next_page = base_url + next_page_link if next_page_link else None
+
+    return next_page
+
+def multi_page(single_page_var):
+
+    current_url = ''
+
+    current_url = single_page_var
+
+    while current_url:
+
+        next_response = pipeline.fetch_website(init, current_url, 30)
+
+        parsed1 = single_page(next_response)
+
+        current_url = parsed1
+
+page_1 = single_page(website)
+multi_page(page_1)
