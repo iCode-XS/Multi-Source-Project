@@ -2,6 +2,9 @@
 
 from core import pipeline
 from core import showman
+import time
+import random
+import json
 
 # Initiating a session
 
@@ -19,7 +22,7 @@ website = pipeline.fetch_website(init, url, 30)
 # Extraction logic begins here
 
 
-def single_page(response_var):
+def single_page(response_var, list_var):
 
     print()
 
@@ -70,9 +73,13 @@ def single_page(response_var):
         capture['Contact Source'] = base_url + contact_a if contact_a else 'N/A'
 
         showman.carriage_dict(capture, timeout=0.7)
-
         print(f'\r{showman.MOVE_UP}{showman.CLEAR_LINE}')
 
+        list_var.append(capture)
+
+        random_num = random.uniform(0.3, 2.3)
+
+        time.sleep(random_num)
 
     next_page_sibling = parsed.find('i', class_='fa fa-arrow-right')
     next_page_link = next_page_sibling.parent['href'] if next_page_sibling else None
@@ -81,19 +88,38 @@ def single_page(response_var):
 
     return next_page
 
+
 def multi_page(single_page_var):
 
     current_url = ''
 
     current_url = single_page_var
 
-    while current_url:
+    data = []
+
+    while current_url: 
 
         next_response = pipeline.fetch_website(init, current_url, 30)
 
-        parsed1 = single_page(next_response)
+        parsed1 = single_page(next_response, data)
 
         current_url = parsed1
 
-page_1 = single_page(website)
+        with open('website_1.json', 'a') as f:
+
+            json.dump(data, f, indent=4)
+            data.clear()
+
+
+data = []
+
+page_1 = single_page(website, data)
+
+with open('website_1.json', 'w') as f:
+
+    json.dump(data, f, indent=4)
+    data.clear()
+
+print()
+
 multi_page(page_1)
