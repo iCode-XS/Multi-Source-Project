@@ -101,6 +101,9 @@ def single_page(response_var, list_var):
     showman.mv_clr()
     showman.mv_clr()
 
+    logger.info('')
+    logger.info('')
+
     next_page_sibling = parsed.find('i', class_='fa fa-arrow-right')
     next_page_link = next_page_sibling.parent['href'] if next_page_sibling else None
 
