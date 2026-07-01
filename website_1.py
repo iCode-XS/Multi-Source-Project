@@ -3,10 +3,19 @@
 from core import pipeline
 from core import showman
 import time
-import random
 import json
+from loguru import logger
 
 # Initiating a session
+
+logger.remove()
+
+logger.add('website_1.log', rotation='10MB')
+
+# Default Placeholders
+
+page_number = None
+current_item = None
 
 init = pipeline.init_session(pipeline.chromium_linux, http2_enable=True)
 base_url = 'https://www.boekwinkeltjes.nl'
@@ -15,16 +24,18 @@ base_url = 'https://www.boekwinkeltjes.nl'
 
 url = 'https://www.boekwinkeltjes.nl/w/list/'
 
+working_url = None
+
 # Fetching the webiste
 
 website = pipeline.fetch_website(init, url, 30)
 
+working_url = url
+page_number = 1
+
 # Extraction logic begins here
 
-
 def single_page(response_var, list_var):
-
-    print()
 
     parsed = pipeline.parse_website(response_var)
 
@@ -32,7 +43,15 @@ def single_page(response_var, list_var):
 
     tr = table.find_all('tr')
 
-    for x in tr:
+    print(f'Current URL: {working_url}')
+
+    print(f'Page No: {page_number}')
+
+    for num, x in enumerate(tr, start=1):
+
+        if num == 1:
+
+            continue
 
         capture = {}
 
@@ -55,11 +74,13 @@ def single_page(response_var, list_var):
         else:
             capture['Image Source'] = base_url + image_url
 
-        # print(image_url)
-
         bookstore_cont = image_url_cont.find_next_sibling() if image_url_cont else None
         capture['Bookstore'] = bookstore_cont.text.strip() if bookstore_cont else 'N/A'
 
+        global current_item
+        current_item = capture['Bookstore']
+
+        print(f'Extrating item: {current_item}')
 
         por = bookstore_cont.find_next_sibling() if bookstore_cont else None
         capture['Place of Residence'] = por.text.strip() if por else 'N/A'
@@ -72,14 +93,13 @@ def single_page(response_var, list_var):
         contact_a = contact_container.find('a')['href'] if contact_container else None
         capture['Contact Source'] = base_url + contact_a if contact_a else 'N/A'
 
-        showman.carriage_dict(capture, timeout=0.7)
-        print(f'\r{showman.MOVE_UP}{showman.CLEAR_LINE}')
-
         list_var.append(capture)
 
-        random_num = random.uniform(0.3, 2.3)
+        time.sleep(0.7)
+        showman.mv_clr()
 
-        time.sleep(random_num)
+    showman.mv_clr()
+    showman.mv_clr()
 
     next_page_sibling = parsed.find('i', class_='fa fa-arrow-right')
     next_page_link = next_page_sibling.parent['href'] if next_page_sibling else None
@@ -97,9 +117,17 @@ def multi_page(single_page_var):
 
     data = []
 
-    while current_url: 
+    while current_url:
+
+        time.sleep(1)
 
         next_response = pipeline.fetch_website(init, current_url, 30)
+
+        global page_number
+        page_number += 1
+
+        global working_url
+        working_url = current_url
 
         parsed1 = single_page(next_response, data)
 
@@ -113,6 +141,18 @@ def multi_page(single_page_var):
 
 data = []
 
+print('Multi Source Project | Version 1.2 (Main)')
+
+print()
+
+showman.carriage_dotprint('Initiating', wipe_space=True)
+
+time.sleep(1.3)
+
+showman.carriage_dotprint('Ingestion in progress | Please wait', next_line=True)
+
+print()
+
 page_1 = single_page(website, data)
 
 with open('website_1.json', 'w') as f:
@@ -120,6 +160,9 @@ with open('website_1.json', 'w') as f:
     json.dump(data, f, indent=4)
     data.clear()
 
-print()
-
 multi_page(page_1)
+
+showman.mv_clr()
+showman.mv_clr()
+
+init.close()
