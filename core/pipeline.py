@@ -8,7 +8,7 @@ import pandas as pd
 
 # logger.remove()
 
-logger.add('event.log', rotation='10MB')
+# logger.add('event.log', rotation='10MB')
 
 
 chromium_linux = {
@@ -49,7 +49,7 @@ def parse_website(response_object):
 
     try:
         logger.info('Trying to parse the bs4 object...')
-        soup = BeautifulSoup(response_object, 'lxml')
+        soup = BeautifulSoup(response_object.text, 'lxml')
         logger.info('Success! The BeautifulSoup Object has been parsed successfully')
 
         return soup
@@ -57,7 +57,7 @@ def parse_website(response_object):
     except Exception as e:
         raise RuntimeError(f'Something is wrong in parsing the bs4 object: {response_object}', e)
 
-def load_data(payload, name, save_csv=False, save_excel=False, index_switch=False, append=False, headers_on=False):
+def load_data(payload, name, save_csv=False, save_excel=False, index_switch=False, append=False, headers_on=True):
 
     try:
         data = pd.DataFrame(payload)

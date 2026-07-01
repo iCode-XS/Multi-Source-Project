@@ -42,13 +42,10 @@ def count(line, num, wipe_space=False, next_line=False):
         liner()
 
 
-def carriage_print(line, timeout=0, wipe_space=False, next_line=False):
+def carriage_print(line, timeout=1, wipe_space=False, next_line=False):
 
     if type(line) is not str:
         raise TypeError('First argument: Only strings are expected!')
-
-    if type(timeout) is not int:
-        raise TypeError('Second argument should be num!')
 
     if type(wipe_space) is not bool or type(next_line) is not bool:
         raise TypeError('Third and forth argument only accept boolean values!')
