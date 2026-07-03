@@ -16,6 +16,9 @@ logger.add('website_1.log', rotation='10MB')
 
 page_number = None
 current_item = None
+total_page_count = 0
+count_per_iter = 0
+items_left_per_iter = 0
 
 init = pipeline.init_session(pipeline.chromium_linux, http2_enable=True)
 base_url = 'https://www.boekwinkeltjes.nl'
@@ -35,7 +38,22 @@ page_number = 1
 
 # Extraction logic begins here
 
-def single_page(response_var, list_var):
+def count_pages(response_var):
+
+    parsed = pipeline.parse_website(response_var)
+
+    next_page_sibling = parsed.find('i', class_='fa fa-arrow-right')
+    next_page_link = next_page_sibling.parent['href'] if next_page_sibling else None
+
+    next_page_cont = next_page_sibling.parent if next_page_sibling else None
+    total_pages = next_page_cont.find_previous_sibling().text
+
+    final_val = int(total_pages)
+
+    return final_val
+
+
+def single_page(response_var, list_var, total_page):
 
     parsed = pipeline.parse_website(response_var)
 
@@ -45,12 +63,15 @@ def single_page(response_var, list_var):
 
     print(f'Current URL: {working_url}')
 
-    print(f'Page No: {page_number}')
+    count_iter = 0
 
     for num, x in enumerate(tr, start=1):
 
-        if num == 1:
+        start_time = time.perf_counter()
 
+        count_iter += 1
+
+        if num == 1:
             continue
 
         capture = {}
@@ -93,26 +114,49 @@ def single_page(response_var, list_var):
         contact_a = contact_container.find('a')['href'] if contact_container else None
         capture['Contact Source'] = base_url + contact_a if contact_a else 'N/A'
 
+        next_page_sibling = parsed.find('i', class_='fa fa-arrow-right')
+        next_page_link = next_page_sibling.parent['href'] if next_page_sibling else None
+
         list_var.append(capture)
 
-        time.sleep(0.7)
+        global total_pages
+        global items_left_per_iter
+        global count_per_iter
+
+        items_left_per_iter = (total_pages * len(tr) - total_pages) - num
+
+        seconds = items_left_per_iter * count_per_iter
+
+        minute = seconds / 60
+
+        second = seconds % 60
+
+        print('Estimated Time of Completion:', round(minute, 1), 'minutes,', round(second, 2), 'seconds left')
+
+        time.sleep(0.2)
+
+        end_time = time.perf_counter()
+
+        time_per_iter = round(end_time - start_time, 2)
+
+        count_per_iter = time_per_iter
+
+        showman.mv_clr()
         showman.mv_clr()
 
     showman.mv_clr()
-    showman.mv_clr()
+
+    total_pages -= 1
 
     logger.info('')
     logger.info('')
-
-    next_page_sibling = parsed.find('i', class_='fa fa-arrow-right')
-    next_page_link = next_page_sibling.parent['href'] if next_page_sibling else None
 
     next_page = base_url + next_page_link if next_page_link else None
 
     return next_page
 
 
-def multi_page(single_page_var):
+def multi_page(single_page_var, total_page):
 
     current_url = ''
 
@@ -132,7 +176,7 @@ def multi_page(single_page_var):
         global working_url
         working_url = current_url
 
-        parsed1 = single_page(next_response, data)
+        parsed1 = single_page(next_response, data, total_page)
 
         current_url = parsed1
 
@@ -144,9 +188,11 @@ def multi_page(single_page_var):
 
 data = []
 
-print('Multi Source Project | Version 1.2 (Main)')
+print('Multi Source Project | Version 1.4 Main')
 
 print()
+
+total_pages = count_pages(website)
 
 showman.carriage_dotprint('Initiating', wipe_space=True)
 
@@ -156,14 +202,14 @@ showman.carriage_dotprint('Ingestion in progress | Please wait', next_line=True)
 
 print()
 
-page_1 = single_page(website, data)
+page_1 = single_page(website, data, total_pages)
 
 with open('website_1.json', 'w') as f:
 
     json.dump(data, f, indent=4)
     data.clear()
 
-multi_page(page_1)
+multi_page(page_1, total_pages)
 
 showman.mv_clr()
 showman.mv_clr()
