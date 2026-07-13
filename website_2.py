@@ -22,13 +22,18 @@ time_per_iter = 0
 last_page_number = 0
 items_per_page = 0
 total_iter = 0
+page_count = 0
 
 
 def change_page(response_object):
 
     soup = pipeline.parse_website(response_object)
 
-    next_page = soup.find('a', class_='page-link', rel='next')['href']
+    if page_count != last_page_number:
+        next_page = soup.find('a', class_='page-link', rel='next')['href']
+
+    else:
+        return None
 
     link_logic = base_url + next_page
 
@@ -49,13 +54,12 @@ def dealer_link_harvester(response_object, list_name):
 
     last_page_parent = li_tags[-2]
 
-    last_page = last_page_parent.find('a')['href']
+    if total_iter == 0:
 
-    last_page_holder = last_page.split('=')
-
-    global last_page_number
-
-    last_page_number = int(last_page_holder[-1])
+        last_page = last_page_parent.find('a')['href']
+        last_page_holder = last_page.split('=')
+        global last_page_number
+        last_page_number = int(last_page_holder[-1])
 
     for item in container:
 
@@ -105,9 +109,10 @@ def extraction(url_list):
         capture['Bookstore'] = cleaned_bookstore
 
         lower_container = soup.find('div', class_='mb-3 small')
-        address = lower_container.find('div', class_='flex-grow-1 text-muted').text if lower_container else 'N/A'
+        address = lower_container.find('div', class_='flex-grow-1 text-muted') if lower_container else 'N/A'
+        address_bulletp = address.text if address else 'N/A'
 
-        cleaned_address = address.strip()
+        cleaned_address = address_bulletp.strip()
 
         final_address_1 = cleaned_address.replace('                    ', ' ')
         final_address_2 = final_address_1.replace('\n', ' ')
@@ -115,19 +120,22 @@ def extraction(url_list):
 
         email_container = lower_container.find('div', class_='d-flex mb-2')
 
-        email_child = email_container.find_next_sibling()
+        email_child = email_container.find_next_sibling() if email_container else None
         email_child_2 = email_child.find('div', class_='flex-grow-1') if email_child else 'N/A'
 
-        if email_child:
-            email = email_child_2.find('a') if email_child_2 else 'N/A'
-            email_href = email['href'] if email_child_2 else 'N/A'
-        else:
+        try:
+            email = email_child_2.find('a').get('href', 'N/A') if email_container else 'N/A'
+        except:
             email = 'N/A'
 
-        contact_container = email_child.find_next_sibling()
+        try:
+            contact_container = email_child.find_next_sibling()
 
-        contact = contact_container.find('div', class_='flex-grow-1 text-muted').text if contact_container else 'N/A'
-        cleaned_contact = contact.strip('\n ')
+            contact = contact_container.find('div', class_='flex-grow-1 text-muted').text if contact_container else 'N/A'
+            cleaned_contact = contact.strip('\n ')
+
+        except:
+            cleaned_contact = 'N/A'
 
         por_container = soup.find('div', class_='ab-meta')
         por_child = por_container.find('span')
@@ -159,7 +167,13 @@ def extraction(url_list):
 
         global time_per_iter
 
-        eta = time_per_iter * items_per_page * last_page_number
+        # eta = time_per_iter * items_per_page * last_page_number
+
+        total_items = items_per_page * last_page_number
+
+        items_left = total_items - total_iter
+
+        eta = time_per_iter * items_left
 
         eta_in_min = round(eta / 60, 1)
 
@@ -181,6 +195,9 @@ def extraction(url_list):
 
         json.dump(data, f, indent=4)
         data.clear()
+
+    global page_count
+    page_count += 1
 
 
 def pagination(session_name, next_url, url_list):
