@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 
 from core import pipeline
+from core import showman
 from loguru import logger
 import os
 import json
 import time
+
+logger.remove()
 
 logger.add('website_2.log', rotation='10MB')
 
@@ -64,7 +67,6 @@ def dealer_link_harvester(response_object, list_name):
     for item in container:
 
         dealer_name = item.find('a')['href']
-        print('Link:', dealer_name)
         list_name.append(dealer_name)
 
 
@@ -78,7 +80,7 @@ def extraction(url_list):
 
     items_per_page = len(url_list)
 
-    print(items_per_page)
+    print()
 
     while url_list:
 
@@ -167,8 +169,6 @@ def extraction(url_list):
 
         global time_per_iter
 
-        # eta = time_per_iter * items_per_page * last_page_number
-
         total_items = items_per_page * last_page_number
 
         items_left = total_items - total_iter
@@ -179,11 +179,13 @@ def extraction(url_list):
 
         eta_in_seconds = round(eta % 60, 2)
 
-        print(f'Time taken per iteration: {time_per_iter} seconds')
+        print(f'Extracting item: {cleaned_bookstore}')
 
-        print(f'ETA: {eta_in_min} minutes, {eta_in_seconds} seconds')
+        if eta_in_min > 0:
+            print('Estimated Time of Completion:', round(eta_in_min, 1), 'minutes,', round(eta_in_seconds, 2), 'seconds left')
 
-        print('Total Iterations:', total_iter)
+        else:
+            print('Estimated Time of Completion:', 'Soon')
 
         time.sleep(2)
 
@@ -191,11 +193,15 @@ def extraction(url_list):
 
         time_per_iter = round(end_time - start_time, 2)
 
+        showman.mv_clr()
+        showman.mv_clr()
+
     with open('website_2.json', 'a') as f:
 
         json.dump(data, f, indent=4)
         data.clear()
 
+    showman.mv_clr()
     global page_count
     page_count += 1
 
