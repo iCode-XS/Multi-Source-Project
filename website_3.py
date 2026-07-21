@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
 from core import pipeline
+import time
+from loguru import logger
+
 
 base_url = 'https://www.pbfa.org'
 
@@ -32,8 +35,6 @@ def extraction(links_list):
 
         current_url = links_list.pop(0)
 
-        print(current_url)
-
         response = pipeline.fetch_website(session, current_url, timer=20)
 
         soup = pipeline.parse_website(response)
@@ -48,7 +49,40 @@ def extraction(links_list):
 
         address = soup.find('span', class_='italic text-sand-darker text-sm md:text-base leading-loose').text
 
-        break
+        cleaned_address = address.replace(',', ', ')
+
+        bba = soup.find('a', title='Books for Sale by Member')
+        bba_link = bba.get('href', 'N/A') if bba else 'N/A'
+
+
+        member_container = soup.find('div', class_='text-center w-full lg:w-1/5')
+        member_link = member_container.find('a', attrs={'href': True})
+        member_url = member_link.get('href', 'N/A') if member_link else None
+
+        if member_url:
+            
+            response = pipeline.fetch_website(session, member_url, timer=20)
+
+            soup = pipeline.parse_website(response)
+
+            email = soup.find('a', title='Email dealer')
+            contact = soup.find('a', title='Call dealer')
+
+            email_info = email.get('href', 'N/A') if email else 'N/A'
+            contact_info = contact.get('href', 'N/A') if contact else 'N/A'
+
+            cleaned_email = email_info.removeprefix('mailto:')
+            cleaned_contact = contact_info.removeprefix('tel:')
+
+        print(shop_name)
+        print(cleaned_address)
+        print(bba_link)
+        print(cleaned_email)
+        print(cleaned_contact)
+
+        time.sleep(2)
+
+        logger.info('')
 
 
 all_websites = []
@@ -56,3 +90,9 @@ all_websites = []
 harvest = product_link_harvester(response, all_websites)
 
 extract = extraction(all_websites)
+
+logger.info('')
+
+logger.info('')
+
+session.close()
