@@ -3,7 +3,12 @@
 from core import pipeline
 import time
 from loguru import logger
+import json
+import os
 
+# Defaults
+
+total_iter = 0
 
 base_url = 'https://www.pbfa.org'
 
@@ -29,9 +34,19 @@ def product_link_harvester(response_object, links_list):
         links_list.append(links_href)
 
 
-def extraction(links_list):
+def extraction(links_list, storage_list):
+
+    conditional_iter = 0
 
     while links_list:
+
+        global total_iter
+
+        total_iter += 1
+
+        conditional_iter += 1
+
+        capture = {}
 
         current_url = links_list.pop(0)
 
@@ -60,7 +75,7 @@ def extraction(links_list):
         member_url = member_link.get('href', 'N/A') if member_link else None
 
         if member_url:
-            
+
             response = pipeline.fetch_website(session, member_url, timer=20)
 
             soup = pipeline.parse_website(response)
@@ -74,22 +89,40 @@ def extraction(links_list):
             cleaned_email = email_info.removeprefix('mailto:')
             cleaned_contact = contact_info.removeprefix('tel:')
 
-        print(shop_name)
-        print(cleaned_address)
-        print(bba_link)
-        print(cleaned_email)
-        print(cleaned_contact)
+        capture['Image Source'] = 'N/A'
+        capture['Bookstore'] = shop_name 
+        capture['Place of Residence'] = 'N/A'
+        capture['Books by Author'] = bba_link
+        capture['Contact Source'] = cleaned_email
+        capture['Address'] = cleaned_address
 
         time.sleep(2)
+
+        storage_list.append(capture)
+
+        print(storage_list)
+
+        if conditional_iter == 10:
+
+            with open('website_3.json', 'a') as f:
+                json.dump(storage_list, f, indent = 4)
+
+            storage_list.clear()
+            conditional_iter = 0
 
         logger.info('')
 
 
+if os.path.exists('website_3.json'):
+    os.remove('website_3.json')
+
 all_websites = []
+
+data = []
 
 harvest = product_link_harvester(response, all_websites)
 
-extract = extraction(all_websites)
+extract = extraction(all_websites, data)
 
 logger.info('')
 
