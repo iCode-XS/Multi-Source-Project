@@ -5,10 +5,18 @@ import time
 from loguru import logger
 import json
 import os
+from core import showman
+
+# Logger
+
+logger.remove()
+
+logger.add('website_3.log', rotation='10MB')
 
 # Defaults
 
 total_iter = 0
+time_per_iter = 0
 
 base_url = 'https://www.pbfa.org'
 
@@ -40,7 +48,11 @@ def extraction(links_list, storage_list):
 
     while links_list:
 
+        start_time = time.perf_counter()
+
         global total_iter
+
+        end_time = 0
 
         total_iter += 1
 
@@ -96,11 +108,23 @@ def extraction(links_list, storage_list):
         capture['Contact Source'] = cleaned_email
         capture['Address'] = cleaned_address
 
-        time.sleep(2)
-
         storage_list.append(capture)
 
-        print(storage_list)
+        global time_per_iter
+
+        items_left = len(links_list)
+
+        eta = round(time_per_iter * items_left, 2)
+
+        eta_in_minutes = round(eta / 60, 1)
+
+        eta_in_seconds = round(eta % 60, 2)
+
+        print()
+
+        print(f'Extracting item: {shop_name}')
+
+        print(f'Estimated Time for Completion: {eta_in_minutes} minutes, {eta_in_seconds} seconds')
 
         if conditional_iter == 10:
 
@@ -111,6 +135,16 @@ def extraction(links_list, storage_list):
             conditional_iter = 0
 
         logger.info('')
+
+        time.sleep(2)
+
+        end_time = time.perf_counter()
+
+        time_per_iter = round(end_time - start_time, 2)
+
+        showman.mv_clr()
+        showman.mv_clr()
+        showman.mv_clr()
 
 
 if os.path.exists('website_3.json'):
