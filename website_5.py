@@ -63,10 +63,10 @@ for x in info:
     capture['Place of Residence'] = city_safe
 
     contact_source = info_container.find('p', class_='member-email') if info_container else None
-    email = contact_source.text if contact_source else 'N/A'
+    email = contact_source.text.removeprefix('Email: ') if contact_source else 'N/A'
 
     bba_cont = info_container.find('p', class_='member-website')
-    bba = bba_cont.text if bba_cont else 'N/A'
+    bba = bba_cont.text.removeprefix('Website: ') if bba_cont else 'N/A'
 
     capture['Books by Author'] = bba
     capture['Contact Source'] = email
