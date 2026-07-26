@@ -3,7 +3,12 @@
 from core import pipeline
 import time
 import json
+from loguru import logger
+from core import showman
 
+logger.remove()
+
+logger.add('website_4.log', rotation='10MB')
 
 # Defaults
 
@@ -66,6 +71,8 @@ def extraction(bs4_object, list_name):
         if length_addr_list <= total_address:
             address_select = address[addr_list.pop(0)]
 
+        print()
+
         print(f'Current URL: {target_url}')
 
         print(f'Extracting item: {title}')
@@ -81,8 +88,6 @@ def extraction(bs4_object, list_name):
         eta_in_seconds = round(eta % 60, 2)
 
         print(f'Estimated Time of Completion: {eta_in_mins} minutes, {eta_in_seconds} seconds')
-
-        print()
 
         capture['Image Source'] = 'N/A'
 
@@ -103,6 +108,14 @@ def extraction(bs4_object, list_name):
         end_time = time.perf_counter()
 
         time_per_iter = round(end_time - start_time, 2)
+
+        showman.mv_clr()
+
+        showman.mv_clr()
+
+        showman.mv_clr()
+
+        showman.mv_clr()
 
     with open('website_4.json', 'w') as f:
 
