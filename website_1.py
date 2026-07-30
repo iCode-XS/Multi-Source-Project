@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
+from core import user_agents
 from core import pipeline
-from core import showman
+from core import terminal_interface as tui
 import time
 import json
 from loguru import logger
+from rich.panel import Panel
 
 # Initiating a session
 
@@ -19,8 +21,11 @@ current_item = None
 total_page_count = 0
 count_per_iter = 0
 items_left_per_iter = 0
+minute = 0
+second = 0
+total_pages = 0
+current_url = ''
 
-init = pipeline.init_session(pipeline.chromium_linux, http2_enable=True)
 base_url = 'https://www.boekwinkeltjes.nl'
 
 # Target URL
@@ -31,7 +36,13 @@ working_url = None
 
 # Fetching the webiste
 
-website = pipeline.fetch_website(init, url, 30)
+
+def first_exec():
+    init = pipeline.init_session(user_agents.firefox_linux, http2_enable=False)
+    website = pipeline.fetch_website(init, url, 30)
+
+    return init, website
+
 
 working_url = url
 page_number = 1
@@ -53,15 +64,13 @@ def count_pages(response_var):
     return final_val
 
 
-def single_page(response_var, list_var, total_page):
+def single_page(response_var, list_var, total_page, queue1):
 
     parsed = pipeline.parse_website(response_var)
 
     table = parsed.find('table')
 
     tr = table.find_all('tr')
-
-    print(f'Current URL: {working_url}')
 
     count_iter = 0
 
@@ -101,7 +110,6 @@ def single_page(response_var, list_var, total_page):
         global current_item
         current_item = capture['Bookstore']
 
-        print(f'Extrating item: {current_item}')
 
         por = bookstore_cont.find_next_sibling() if bookstore_cont else None
         capture['Place of Residence'] = por.text.strip() if por else 'N/A'
@@ -122,16 +130,23 @@ def single_page(response_var, list_var, total_page):
         global total_pages
         global items_left_per_iter
         global count_per_iter
+        global current_url
+        global minute
+        global second
 
         items_left_per_iter = (total_pages * len(tr) - total_pages) - num
 
         seconds = items_left_per_iter * count_per_iter
 
-        minute = seconds / 60
+        minute = round(seconds / 60, 1)
 
-        second = seconds % 60
+        second = round(seconds % 60, 2)
 
-        print('Estimated Time of Completion:', round(minute, 1), 'minutes,', round(second, 2), 'seconds left')
+        queue1.put(
+            f'Current URL: {working_url}\n'
+            f'Extracting item: {current_item}\n'
+            f'Estimating time for completion: {minute} minute, {second} seconds\n'
+        )
 
         time.sleep(0.2)
 
@@ -140,11 +155,6 @@ def single_page(response_var, list_var, total_page):
         time_per_iter = round(end_time - start_time, 2)
 
         count_per_iter = time_per_iter
-
-        showman.mv_clr()
-        showman.mv_clr()
-
-    showman.mv_clr()
 
     total_pages -= 1
 
@@ -156,9 +166,9 @@ def single_page(response_var, list_var, total_page):
     return next_page
 
 
-def multi_page(single_page_var, total_page):
+def multi_page(single_page_var, total_page, init, queue1):
 
-    current_url = ''
+    global current_url
 
     current_url = single_page_var
 
@@ -176,7 +186,7 @@ def multi_page(single_page_var, total_page):
         global working_url
         working_url = current_url
 
-        parsed1 = single_page(next_response, data, total_page)
+        parsed1 = single_page(next_response, data, total_page, queue1)
 
         current_url = parsed1
 
@@ -186,32 +196,29 @@ def multi_page(single_page_var, total_page):
             data.clear()
 
 
-data = []
+def scraper_1(queue1):
 
-print('Multi Source Project | Version 1.4 Main')
+    queue1.put('Initializing...')
 
-print()
+    global layout
 
-total_pages = count_pages(website)
+    global total_pages
 
-showman.carriage_dotprint('Initiating', wipe_space=True)
+    init, website = first_exec()
 
-time.sleep(1.3)
+    data = []
 
-showman.carriage_dotprint('Ingestion in progress | Please wait', next_line=True)
+    total_pages = count_pages(website)
 
-print()
+    time.sleep(1.3)
 
-page_1 = single_page(website, data, total_pages)
+    page_1 = single_page(website, data, total_pages, queue1)
 
-with open('website_1.json', 'w') as f:
+    with open('website_1.json', 'w') as f:
 
-    json.dump(data, f, indent=4)
-    data.clear()
+        json.dump(data, f, indent=4)
+        data.clear()
 
-multi_page(page_1, total_pages)
+    multi_page(page_1, total_pages, init, queue1)
 
-showman.mv_clr()
-showman.mv_clr()
-
-init.close()
+    init.close()

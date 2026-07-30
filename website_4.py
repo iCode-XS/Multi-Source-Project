@@ -15,34 +15,40 @@ logger.add('website_4.log', rotation='10MB')
 time_per_iter = 0
 current_iter = 0
 
-# Code 
+# Code
 
 base_url = 'https://www.ioba.org/'
 
 target_url = 'https://www.ioba.org/members-directory'
 
-session = pipeline.init_session(pipeline.chromium_linux)
 
-response = pipeline.fetch_website(session, target_url, timer=20)
+def step_1():
 
-parsed = pipeline.parse_website(response)
+    session = pipeline.init_session(pipeline.chromium_linux)
 
-# Number pattern generator for messy address logic
-# Don't blame me, this is my current skill level! Logic might be different if I was practicing css selectors based scraping
+    response = pipeline.fetch_website(session, target_url, timer=20)
 
-addr_list = [2]
+    parsed = pipeline.parse_website(response)
 
-addr_num = 2
+    # Number pattern generator for messy address logic
+    # Don't blame me, this is my current skill level! Logic might be different if I was practicing css selectors based scraping
 
-for x in range(9):
+    addr_list = [2]
 
-    addr_num += 3
+    addr_num = 2
 
-    addr_list.append(addr_num)
+    for x in range(9):
+
+        addr_num += 3
+
+        addr_list.append(addr_num)
+
+    return session, response, parsed, addr_list
+
 
 # Extraction function
 
-def extraction(bs4_object, list_name):
+def extraction(bs4_object, list_name, addr_list, queue4):
 
     container = bs4_object.find_all('div', class_='_FiCX')
 
@@ -62,7 +68,7 @@ def extraction(bs4_object, list_name):
 
         contact = x.find('span', class_='wixui-rich-text__text', style='font-size:14px;').text
 
-        address = parsed.find_all('p', class_='font_8 wixui-rich-text__text', style='font-size:14px; line-height:1.6em;')
+        address = bs4_object.find_all('p', class_='font_8 wixui-rich-text__text', style='font-size:14px; line-height:1.6em;')
 
         total_address = len(address) // 3
 
@@ -70,12 +76,6 @@ def extraction(bs4_object, list_name):
 
         if length_addr_list <= total_address:
             address_select = address[addr_list.pop(0)]
-
-        print()
-
-        print(f'Current URL: {target_url}')
-
-        print(f'Extracting item: {title}')
 
         total_items = len(container)
 
@@ -87,7 +87,11 @@ def extraction(bs4_object, list_name):
 
         eta_in_seconds = round(eta % 60, 2)
 
-        print(f'Estimated Time of Completion: {eta_in_mins} minutes, {eta_in_seconds} seconds')
+        queue4.put(
+            f'Current URL: {target_url}\n'
+            f'Extracting item: {title}\n'
+            f'Estimating time for completion: {eta_in_mins} minute, {eta_in_seconds} seconds\n'
+        )
 
         capture['Image Source'] = 'N/A'
 
@@ -109,19 +113,17 @@ def extraction(bs4_object, list_name):
 
         time_per_iter = round(end_time - start_time, 2)
 
-        showman.mv_clr()
-
-        showman.mv_clr()
-
-        showman.mv_clr()
-
-        showman.mv_clr()
-
     with open('website_4.json', 'w') as f:
 
         json.dump(list_name, f, indent=4)
 
 
-data = []
+def scraper_4(queue4):
 
-a = extraction(parsed, data)
+    queue4.put('Initializing Website #4 Ingestion...')
+
+    session, response, parsed, addr_list = step_1()
+
+    data = []
+
+    a = extraction(parsed, data, addr_list, queue4)

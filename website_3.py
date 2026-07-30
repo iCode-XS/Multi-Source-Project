@@ -22,10 +22,13 @@ base_url = 'https://www.pbfa.org'
 
 target_url = 'https://www.pbfa.org/shops'
 
-session = pipeline.init_session(pipeline.chromium_linux)
+def step_1():
 
-response = pipeline.fetch_website(session, target_url, timer=20)
+    session = pipeline.init_session(pipeline.chromium_linux)
 
+    response = pipeline.fetch_website(session, target_url, timer=20)
+
+    return session, response
 
 def product_link_harvester(response_object, links_list):
 
@@ -42,7 +45,7 @@ def product_link_harvester(response_object, links_list):
         links_list.append(links_href)
 
 
-def extraction(links_list, storage_list):
+def extraction(links_list, storage_list, session, queue3):
 
     conditional_iter = 0
 
@@ -120,16 +123,16 @@ def extraction(links_list, storage_list):
 
         eta_in_seconds = round(eta % 60, 2)
 
-        print()
-
-        print(f'Extracting item: {shop_name}')
-
-        print(f'Estimated Time for Completion: {eta_in_minutes} minutes, {eta_in_seconds} seconds')
+        queue3.put(
+            f'Current URL: {current_url}\n'
+            f'Extracting item: {shop_name}\n'
+            f'Estimating time for completion: {eta_in_minutes} minute, {eta_in_seconds} seconds\n'
+        )
 
         if conditional_iter == 10:
 
             with open('website_3.json', 'a') as f:
-                json.dump(storage_list, f, indent = 4)
+                json.dump(storage_list, f, indent=4)
 
             storage_list.clear()
             conditional_iter = 0
@@ -142,24 +145,27 @@ def extraction(links_list, storage_list):
 
         time_per_iter = round(end_time - start_time, 2)
 
-        showman.mv_clr()
-        showman.mv_clr()
-        showman.mv_clr()
 
 
-if os.path.exists('website_3.json'):
-    os.remove('website_3.json')
+def scraper_3(queue3):
 
-all_websites = []
+    queue3.put('Initializing Website #3 Ingestion...')
 
-data = []
+    if os.path.exists('website_3.json'):
+        os.remove('website_3.json')
 
-harvest = product_link_harvester(response, all_websites)
+    session, response = step_1()
 
-extract = extraction(all_websites, data)
+    all_websites = []
 
-logger.info('')
+    data = []
 
-logger.info('')
+    harvest = product_link_harvester(response, all_websites)
 
-session.close()
+    extract = extraction(all_websites, data, session, queue3)
+
+    logger.info('')
+
+    logger.info('')
+
+    session.close()

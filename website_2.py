@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
+from core import terminal_interface as tui
 from core import pipeline
-from core import showman
 from loguru import logger
 import os
 import json
 import time
+from rich.panel import Panel
 
 logger.remove()
 
@@ -15,9 +16,14 @@ base_url = 'https://www.antiqbook.com'
 
 target_website = 'https://www.antiqbook.com/dealers'
 
-session = pipeline.init_session(pipeline.chromium_linux)
 
-response = pipeline.fetch_website(session, target_website, timer=20)
+def dependencies():
+
+    session = pipeline.init_session(pipeline.chromium_linux)
+
+    response = pipeline.fetch_website(session, target_website, timer=20)
+
+    return session, response
 
 # Defaults
 
@@ -70,7 +76,7 @@ def dealer_link_harvester(response_object, list_name):
         list_name.append(dealer_name)
 
 
-def extraction(url_list):
+def extraction(url_list, session, queue2):
 
     current_iter = 0
 
@@ -79,8 +85,6 @@ def extraction(url_list):
     global items_per_page
 
     items_per_page = len(url_list)
-
-    print()
 
     while url_list:
 
@@ -179,13 +183,11 @@ def extraction(url_list):
 
         eta_in_seconds = round(eta % 60, 2)
 
-        print(f'Extracting item: {cleaned_bookstore}')
-
-        if eta_in_min > 0:
-            print('Estimated Time of Completion:', round(eta_in_min, 1), 'minutes,', round(eta_in_seconds, 2), 'seconds left')
-
-        else:
-            print('Estimated Time of Completion:', 'Soon')
+        queue2.put(
+            f'Current URL: {current_url}\n'
+            f'Extracting item: {cleaned_bookstore}\n'
+            f'Estimating time for completion: {eta_in_min} minute, {eta_in_seconds} seconds\n'
+        )
 
         time.sleep(2)
 
@@ -193,20 +195,16 @@ def extraction(url_list):
 
         time_per_iter = round(end_time - start_time, 2)
 
-        showman.mv_clr()
-        showman.mv_clr()
-
     with open('website_2.json', 'a') as f:
 
         json.dump(data, f, indent=4)
         data.clear()
 
-    showman.mv_clr()
     global page_count
     page_count += 1
 
 
-def pagination(session_name, next_url, url_list):
+def pagination(session_name, next_url, url_list, queue2):
 
     current_url = next_url
 
@@ -218,22 +216,28 @@ def pagination(session_name, next_url, url_list):
 
         link_gen = dealer_link_harvester(response, url_list)
 
-        ingestion = extraction(url_list)
+        ingestion = extraction(url_list, queue2)
 
         current_url = change_page(response)
 
 
-if os.path.exists('website_2.json'):
-    os.remove('website_2.json')
+def scraper_2(queue2):
 
-dealers_url = []
+    queue2.put('Initiating Website #2 Ingestion...')
 
-a = dealer_link_harvester(response, dealers_url)
+    session, response = dependencies()
 
-b = extraction(dealers_url)
+    if os.path.exists('website_2.json'):
+        os.remove('website_2.json')
 
-c = change_page(response)
+    dealers_url = []
 
-d = pagination(session, c, dealers_url)
+    a = dealer_link_harvester(response, dealers_url)
 
-session.close()
+    b = extraction(dealers_url, session, queue2)
+
+    c = change_page(response)
+
+    d = pagination(session, c, dealers_url, queue2)
+
+    session.close()
