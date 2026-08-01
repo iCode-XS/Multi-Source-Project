@@ -8,12 +8,6 @@ import json
 from loguru import logger
 from rich.panel import Panel
 
-# Initiating a session
-
-logger.remove()
-
-logger.add('website_1.log', rotation='10MB')
-
 # Default Placeholders
 
 page_number = None
@@ -197,6 +191,10 @@ def multi_page(single_page_var, total_page, init, queue1):
 
 
 def scraper_1(queue1):
+
+    logger.remove()
+
+    logger.add('website_1.log', rotation='10MB')
 
     queue1.put('Initializing...')
 

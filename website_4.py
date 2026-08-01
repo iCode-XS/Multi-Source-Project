@@ -6,10 +6,6 @@ import json
 from loguru import logger
 from core import showman
 
-logger.remove()
-
-logger.add('website_4.log', rotation='10MB')
-
 # Defaults
 
 time_per_iter = 0
@@ -119,6 +115,10 @@ def extraction(bs4_object, list_name, addr_list, queue4):
 
 
 def scraper_4(queue4):
+
+    logger.remove()
+
+    logger.add('website_4.log', rotation='10MB')
 
     queue4.put('Initializing Website #4 Ingestion...')
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from core import terminal_interface as tui
+from loguru import logger
 import website_1
 import website_2
 import website_3
@@ -29,6 +30,7 @@ def ingestion_3(queue):
 def ingestion_4(queue):
 
     website_4.scraper_4(queue4)
+
 
 def ingestion_5(queue):
 

@@ -2,15 +2,15 @@
 
 from core import terminal_interface as tui
 from core import pipeline
+from core import user_agents
 from loguru import logger
 import os
 import json
 import time
 from rich.panel import Panel
 
-logger.remove()
 
-logger.add('website_2.log', rotation='10MB')
+
 
 base_url = 'https://www.antiqbook.com'
 
@@ -19,7 +19,7 @@ target_website = 'https://www.antiqbook.com/dealers'
 
 def dependencies():
 
-    session = pipeline.init_session(pipeline.chromium_linux)
+    session = pipeline.init_session(user_agents.zen_browser)
 
     response = pipeline.fetch_website(session, target_website, timer=20)
 
@@ -183,11 +183,19 @@ def extraction(url_list, session, queue2):
 
         eta_in_seconds = round(eta % 60, 2)
 
-        queue2.put(
-            f'Current URL: {current_url}\n'
-            f'Extracting item: {cleaned_bookstore}\n'
-            f'Estimating time for completion: {eta_in_min} minute, {eta_in_seconds} seconds\n'
-        )
+        if queue2:
+
+            queue2.put(
+                f'Current URL: {current_url}\n'
+                f'Extracting item: {cleaned_bookstore}\n'
+                f'Estimating time for completion: {eta_in_min} minute, {eta_in_seconds} seconds\n'
+            )
+
+        else:
+
+            print(f'Current URL: {current_url}')
+            print(f'Extracting item: {cleaned_bookstore}')
+            print()
 
         time.sleep(2)
 
@@ -216,14 +224,20 @@ def pagination(session_name, next_url, url_list, queue2):
 
         link_gen = dealer_link_harvester(response, url_list)
 
-        ingestion = extraction(url_list, queue2)
+        ingestion = extraction(url_list, session_name, queue2)
 
         current_url = change_page(response)
 
 
 def scraper_2(queue2):
 
-    queue2.put('Initiating Website #2 Ingestion...')
+    logger.remove()
+
+    logger.add('website_1.log', rotation='10MB')
+
+    if queue2:
+
+        queue2.put('Initiating Website #2 Ingestion...')
 
     session, response = dependencies()
 
@@ -231,6 +245,8 @@ def scraper_2(queue2):
         os.remove('website_2.json')
 
     dealers_url = []
+
+    print(dealers_url)
 
     a = dealer_link_harvester(response, dealers_url)
 
@@ -241,3 +257,7 @@ def scraper_2(queue2):
     d = pagination(session, c, dealers_url, queue2)
 
     session.close()
+
+
+if __name__ == '__main__':
+    scraper_2(None)

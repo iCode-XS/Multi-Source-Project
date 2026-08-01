@@ -7,12 +7,6 @@ import json
 import os
 from core import showman
 
-# Logger
-
-logger.remove()
-
-logger.add('website_3.log', rotation='10MB')
-
 # Defaults
 
 total_iter = 0
@@ -146,8 +140,11 @@ def extraction(links_list, storage_list, session, queue3):
         time_per_iter = round(end_time - start_time, 2)
 
 
-
 def scraper_3(queue3):
+
+    logger.remove()
+
+    logger.add('website_3.log', rotation='10MB')
 
     queue3.put('Initializing Website #3 Ingestion...')
 

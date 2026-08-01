@@ -6,10 +6,6 @@ import json
 from core import showman
 from loguru import logger
 
-logger.remove()
-
-logger.add('website_5.log', rotation='10MB')
-
 target_url = 'https://abac.org/en/members/'
 
 def start(queue5):
@@ -98,6 +94,10 @@ def start(queue5):
 
 
 def scraper_5(queue5):
+    
+    logger.remove()
+
+    logger.add('website_5.log', rotation='10MB')
 
     queue5.put('Initializing Website #5 Ingestion...')
 
