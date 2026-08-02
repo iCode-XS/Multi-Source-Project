@@ -10,8 +10,6 @@ import time
 from rich.panel import Panel
 
 
-
-
 base_url = 'https://www.antiqbook.com'
 
 target_website = 'https://www.antiqbook.com/dealers'
@@ -76,7 +74,7 @@ def dealer_link_harvester(response_object, list_name):
         list_name.append(dealer_name)
 
 
-def extraction(url_list, session, queue2):
+def extraction(url_list, session, queue2, dqueue2=None, iqueue2=None):
 
     current_iter = 0
 
@@ -183,6 +181,8 @@ def extraction(url_list, session, queue2):
 
         eta_in_seconds = round(eta % 60, 2)
 
+        percentage = int(total_iter / total_items * 100)
+
         if queue2:
 
             queue2.put(
@@ -191,10 +191,20 @@ def extraction(url_list, session, queue2):
                 f'Estimating time for completion: {eta_in_min} minute, {eta_in_seconds} seconds\n'
             )
 
+        if dqueue2:
+
+            dqueue2.put(capture)
+
+        if iqueue2:
+
+            iqueue2.put(percentage)
+
         else:
 
             print(f'Current URL: {current_url}')
             print(f'Extracting item: {cleaned_bookstore}')
+            print(f'Total items: {total_items}')
+            print(f'Percentage: {percentage}')
             print()
 
         time.sleep(2)
@@ -212,7 +222,7 @@ def extraction(url_list, session, queue2):
     page_count += 1
 
 
-def pagination(session_name, next_url, url_list, queue2):
+def pagination(session_name, next_url, url_list, queue2, dqueue2=None, iqueue2=None):
 
     current_url = next_url
 
@@ -224,12 +234,12 @@ def pagination(session_name, next_url, url_list, queue2):
 
         link_gen = dealer_link_harvester(response, url_list)
 
-        ingestion = extraction(url_list, session_name, queue2)
+        ingestion = extraction(url_list, session_name, queue2, dqueue2, iqueue2)
 
         current_url = change_page(response)
 
 
-def scraper_2(queue2):
+def scraper_2(queue2, dqueue2=None, iqueue2=None):
 
     logger.remove()
 
@@ -250,11 +260,11 @@ def scraper_2(queue2):
 
     a = dealer_link_harvester(response, dealers_url)
 
-    b = extraction(dealers_url, session, queue2)
+    b = extraction(dealers_url, session, queue2, dqueue2, iqueue2)
 
     c = change_page(response)
 
-    d = pagination(session, c, dealers_url, queue2)
+    d = pagination(session, c, dealers_url, queue2, dqueue2, iqueue2)
 
     session.close()
 

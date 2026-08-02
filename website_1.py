@@ -19,6 +19,11 @@ minute = 0
 second = 0
 total_pages = 0
 current_url = ''
+counting = 0
+percent_count = 0
+one_percent = 0
+percentage = 0
+final_total_pages = 0
 
 base_url = 'https://www.boekwinkeltjes.nl'
 
@@ -58,7 +63,7 @@ def count_pages(response_var):
     return final_val
 
 
-def single_page(response_var, list_var, total_page, queue1):
+def single_page(response_var, list_var, total_page, queue1, dqueue1, mqueue1=None, squeue1=None, iqueue1=None):
 
     parsed = pipeline.parse_website(response_var)
 
@@ -72,9 +77,24 @@ def single_page(response_var, list_var, total_page, queue1):
 
         start_time = time.perf_counter()
 
+        global one_percent
+        global total_pages
+        global counting
+
+        counting += 1
+
         count_iter += 1
 
+        global final_total_pages
+
+        if counting == 1:
+
+            final_total_pages = total_pages * len(tr) - total_pages
+
+            one_percent = int(final_total_pages / 100)
+
         if num == 1:
+
             continue
 
         capture = {}
@@ -121,14 +141,15 @@ def single_page(response_var, list_var, total_page, queue1):
 
         list_var.append(capture)
 
-        global total_pages
         global items_left_per_iter
         global count_per_iter
         global current_url
         global minute
         global second
 
-        items_left_per_iter = (total_pages * len(tr) - total_pages) - num
+        total_items = total_pages * len(tr) - total_pages
+
+        items_left_per_iter = total_items - num
 
         seconds = items_left_per_iter * count_per_iter
 
@@ -136,11 +157,39 @@ def single_page(response_var, list_var, total_page, queue1):
 
         second = round(seconds % 60, 2)
 
-        queue1.put(
-            f'Current URL: {working_url}\n'
-            f'Extracting item: {current_item}\n'
-            f'Estimating time for completion: {minute} minute, {second} seconds\n'
-        )
+        global percent_count
+
+
+        if counting == one_percent:
+
+            percent_count += 1
+            one_percent = counting + counting
+
+        if queue1:
+            queue1.put(
+                f'Current URL: {working_url}\n'
+                f'Extracting item: {current_item}\n'
+                f'Estimating time for completion: {minute} minute, {second} seconds\n'
+            )
+        else:
+            print(f'Current URL: {working_url}')
+            print(f'Extracting item: {current_item}')
+            print(f'Percentage Calculation: {one_percent} - {counting}')
+            print(f'Percentage: {percent_count}')
+            print()
+
+        if dqueue1:
+            dqueue1.put(capture)
+
+        if mqueue1:
+            mqueue1.put(minute)
+
+        if squeue1:
+            squeue1.put(seconds)
+
+        if iqueue1:
+            iqueue1.put(percent_count)
+
 
         time.sleep(0.2)
 
@@ -160,7 +209,7 @@ def single_page(response_var, list_var, total_page, queue1):
     return next_page
 
 
-def multi_page(single_page_var, total_page, init, queue1):
+def multi_page(single_page_var, total_page, init, queue1, dqueue1, mqueue1, squeue1, iqueue1):
 
     global current_url
 
@@ -180,7 +229,7 @@ def multi_page(single_page_var, total_page, init, queue1):
         global working_url
         working_url = current_url
 
-        parsed1 = single_page(next_response, data, total_page, queue1)
+        parsed1 = single_page(next_response, data, total_page, queue1, dqueue1, mqueue1, squeue1, iqueue1)
 
         current_url = parsed1
 
@@ -190,13 +239,14 @@ def multi_page(single_page_var, total_page, init, queue1):
             data.clear()
 
 
-def scraper_1(queue1):
+def scraper_1(queue1, dqueue1, mqueue1=None, squeue1=None, iqueue1=None):
 
     logger.remove()
 
     logger.add('website_1.log', rotation='10MB')
 
-    queue1.put('Initializing...')
+    if queue1:
+        queue1.put('Initializing...')
 
     global layout
 
@@ -210,13 +260,18 @@ def scraper_1(queue1):
 
     time.sleep(1.3)
 
-    page_1 = single_page(website, data, total_pages, queue1)
+    page_1 = single_page(website, data, total_pages, queue1, dqueue1, mqueue1, squeue1, iqueue1)
 
     with open('website_1.json', 'w') as f:
 
         json.dump(data, f, indent=4)
         data.clear()
 
-    multi_page(page_1, total_pages, init, queue1)
+    multi_page(page_1, total_pages, init, queue1, dqueue1, mqueue1, squeue1, iqueue1)
 
     init.close()
+
+
+if __name__ == '__main__':
+
+    scraper_1(None, None)

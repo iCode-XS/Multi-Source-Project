@@ -8,7 +8,7 @@ from loguru import logger
 
 target_url = 'https://abac.org/en/members/'
 
-def start(queue5):
+def start(queue5, dqueue5=None, iqueue5=None):
 
     session = pipeline.init_session(pipeline.chromium_linux)
 
@@ -76,11 +76,36 @@ def start(queue5):
         eta_in_mins = round(eta / 60, 1)
         eta_in_seconds = round(eta % 60, 2)
 
-        queue5.put(
-            f'Current URL: {target_url}\n'
-            f'Extracting item: {title}\n'
-            f'Estimating time for completion: {eta_in_mins} minute, {eta_in_seconds} seconds\n'
-        )
+        percentage = int(total_iter / total_items * 100)
+
+        if percentage == 98:
+
+            percentage = 100
+
+        if queue5: 
+
+            queue5.put(
+                f'Current URL: {target_url}\n'
+                f'Extracting item: {title}\n'
+                f'Estimating time for completion: {eta_in_mins} minute, {eta_in_seconds} seconds\n'
+            )
+        
+        else:
+
+            print(f'Current URL: {target_url}')
+            print(f'Extracting item: {title}')
+            print(f'Current iterations: {total_iter}')
+            print(f'Total items: {total_items}')
+            print(f'Percentage: {percentage}')
+            print()
+
+        if dqueue5:
+
+            dqueue5.put(capture)
+
+        if iqueue5:
+
+            iqueue5.put(percentage)
 
         time.sleep(0.1)
 
@@ -93,12 +118,19 @@ def start(queue5):
         json.dump(data_list, f, indent=4)
 
 
-def scraper_5(queue5):
-    
+def scraper_5(queue5, dqueue5=None, iqueue5=None):
+
     logger.remove()
 
     logger.add('website_5.log', rotation='10MB')
 
-    queue5.put('Initializing Website #5 Ingestion...')
+    if queue5:
 
-    start(queue5)
+        queue5.put('Initializing Website #5 Ingestion...')
+
+    start(queue5, dqueue5, iqueue5)
+
+
+if __name__ == '__main__':
+
+    scraper_5(None)

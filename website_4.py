@@ -44,7 +44,7 @@ def step_1():
 
 # Extraction function
 
-def extraction(bs4_object, list_name, addr_list, queue4):
+def extraction(bs4_object, list_name, addr_list, queue4, dqueue4=None, iqueue4=None):
 
     container = bs4_object.find_all('div', class_='_FiCX')
 
@@ -82,12 +82,33 @@ def extraction(bs4_object, list_name, addr_list, queue4):
         eta_in_mins = round(eta / 60, 1)
 
         eta_in_seconds = round(eta % 60, 2)
+        
+        percent = int(current_iter / total_items * 100)
 
-        queue4.put(
-            f'Current URL: {target_url}\n'
-            f'Extracting item: {title}\n'
-            f'Estimating time for completion: {eta_in_mins} minute, {eta_in_seconds} seconds\n'
-        )
+        if queue4:
+
+            queue4.put(
+                f'Current URL: {target_url}\n'
+                f'Extracting item: {title}\n'
+                f'Estimating time for completion: {eta_in_mins} minute, {eta_in_seconds} seconds\n'
+            )
+
+        else:
+
+            print(f'Current URL: {target_url}')
+            print(f'Extracting item: {title}')
+            print(f'Total items: {total_items}')
+            print(f'Current Iteration: {current_iter}')
+            print(f'Percentage: {percent}')
+            print()
+
+        if dqueue4:
+
+            dqueue4.put(capture)
+
+        if iqueue4:
+
+            iqueue4.put(percent)
 
         capture['Image Source'] = 'N/A'
 
@@ -114,16 +135,22 @@ def extraction(bs4_object, list_name, addr_list, queue4):
         json.dump(list_name, f, indent=4)
 
 
-def scraper_4(queue4):
+def scraper_4(queue4, dqueue4=None, iqueue4=None):
 
     logger.remove()
 
     logger.add('website_4.log', rotation='10MB')
 
-    queue4.put('Initializing Website #4 Ingestion...')
+    if queue4:
+
+        queue4.put('Initializing Website #4 Ingestion...')
 
     session, response, parsed, addr_list = step_1()
 
     data = []
 
-    a = extraction(parsed, data, addr_list, queue4)
+    a = extraction(parsed, data, addr_list, queue4, dqueue4, iqueue4)
+
+if __name__ == '__main__':
+
+    scraper_4(None)

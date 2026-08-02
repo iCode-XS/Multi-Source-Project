@@ -11,10 +11,12 @@ from core import showman
 
 total_iter = 0
 time_per_iter = 0
+total_items = 0
 
 base_url = 'https://www.pbfa.org'
 
 target_url = 'https://www.pbfa.org/shops'
+
 
 def step_1():
 
@@ -37,9 +39,12 @@ def product_link_harvester(response_object, links_list):
         links = x.find('a')
         links_href = links['href']
         links_list.append(links_href)
+    
+    global total_items
+    total_items = len(links_list)
 
 
-def extraction(links_list, storage_list, session, queue3):
+def extraction(links_list, storage_list, session, queue3, dqueue3=None, iqueue3=None):
 
     conditional_iter = 0
 
@@ -117,11 +122,32 @@ def extraction(links_list, storage_list, session, queue3):
 
         eta_in_seconds = round(eta % 60, 2)
 
-        queue3.put(
-            f'Current URL: {current_url}\n'
-            f'Extracting item: {shop_name}\n'
-            f'Estimating time for completion: {eta_in_minutes} minute, {eta_in_seconds} seconds\n'
-        )
+        percentage = int(total_iter / total_items * 100)
+
+        if queue3:
+
+            queue3.put(
+                f'Current URL: {current_url}\n'
+                f'Extracting item: {shop_name}\n'
+                f'Estimating time for completion: {eta_in_minutes} minute, {eta_in_seconds} seconds\n'
+            )
+
+        else:
+
+            print(f'Current URL: {current_url}')
+            print(f'Extracting item: {shop_name}')
+            print(f'Total items: {total_items}')
+            print(f'Total iterations: {total_iter}')
+            print(f'Percentage: {percentage}')
+            print()
+
+        if dqueue3:
+
+            dqueue3.put(capture)
+
+        if iqueue3:
+
+            iqueue3.put(percentage)
 
         if conditional_iter == 10:
 
@@ -140,13 +166,15 @@ def extraction(links_list, storage_list, session, queue3):
         time_per_iter = round(end_time - start_time, 2)
 
 
-def scraper_3(queue3):
+def scraper_3(queue3, dqueue3=None, iqueue3=None):
 
     logger.remove()
 
     logger.add('website_3.log', rotation='10MB')
 
-    queue3.put('Initializing Website #3 Ingestion...')
+    if queue3:
+
+        queue3.put('Initializing Website #3 Ingestion...')
 
     if os.path.exists('website_3.json'):
         os.remove('website_3.json')
@@ -159,10 +187,15 @@ def scraper_3(queue3):
 
     harvest = product_link_harvester(response, all_websites)
 
-    extract = extraction(all_websites, data, session, queue3)
+    extract = extraction(all_websites, data, session, queue3, dqueue3, iqueue3)
 
     logger.info('')
 
     logger.info('')
 
     session.close()
+
+
+if __name__ == '__main__':
+
+    scraper_3(None)
