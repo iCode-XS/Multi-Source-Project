@@ -186,9 +186,9 @@ def extraction(url_list, session, queue2, dqueue2=None, iqueue2=None):
         if queue2:
 
             queue2.put(
-                f'Current URL: {current_url}\n'
-                f'Extracting item: {cleaned_bookstore}\n'
-                f'Estimating time for completion: {eta_in_min} minute, {eta_in_seconds} seconds\n'
+                f'[bold cyan]Current URL[/bold cyan]: {current_url}\n'
+                f'[bold yellow]Extracting item[/bold yellow]: {cleaned_bookstore}\n'
+                f'[bold green]Estimating time for completion[/bold green]: {eta_in_min} minute, {eta_in_seconds} seconds\n'
             )
 
         if dqueue2:

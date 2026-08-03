@@ -167,9 +167,9 @@ def single_page(response_var, list_var, total_page, queue1, dqueue1, mqueue1=Non
 
         if queue1:
             queue1.put(
-                f'Current URL: {working_url}\n'
-                f'Extracting item: {current_item}\n'
-                f'Estimating time for completion: {minute} minute, {second} seconds\n'
+                f'[bold cyan]Current URL[/bold cyan]: {working_url}\n'
+                f'[bold yellow]Extracting item[/bold yellow]: {current_item}\n'
+                f'[bold green]Estimating time for completion[/bold green]: {minute} minute, {second} seconds\n'
             )
         else:
             print(f'Current URL: {working_url}')

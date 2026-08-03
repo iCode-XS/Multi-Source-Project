@@ -88,9 +88,9 @@ def extraction(bs4_object, list_name, addr_list, queue4, dqueue4=None, iqueue4=N
         if queue4:
 
             queue4.put(
-                f'Current URL: {target_url}\n'
-                f'Extracting item: {title}\n'
-                f'Estimating time for completion: {eta_in_mins} minute, {eta_in_seconds} seconds\n'
+                f'[bold cyan]Current URL[/bold cyan]: {target_url}\n'
+                f'[bold yellow]Extracting item[/bold yellow]: {title}\n'
+                f'[bold green]Estimating time for completion[/bold green]: {eta_in_mins} minute, {eta_in_seconds} seconds\n'
             )
 
         else:

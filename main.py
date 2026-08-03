@@ -10,6 +10,7 @@ import website_5
 import multiprocessing
 from rich.live import Live
 from rich.panel import Panel
+from rich.spinner import Spinner
 
 
 def ingestion_1(queue, dqueue, mqueue, squeue, iqueue):
@@ -73,6 +74,8 @@ if __name__ == '__main__':
     p4.start()
     p5.start()
 
+
+
     with Live(tui.layout, refresh_per_second=10):
         if tui.progress:
 
@@ -81,7 +84,11 @@ if __name__ == '__main__':
             prog3 = tui.progress.add_task('Website #3', total=100, completed=0)
             prog4 = tui.progress.add_task('Website #4', total=100, completed=0)
             prog5 = tui.progress.add_task('Website #5', total=100, completed=0)
-            tui.layout['bright'].update(Panel(tui.progress, title='Time'))
+            tui.layout['bright'].update(Panel(tui.progress, title='Completion', border_style='cyan'))
+
+        tui.layout['Extract'].update(Panel(tui.extract, title='Process', border_style='cyan'))
+        tui.layout['Transform'].update(Panel(tui.transform, title='Process', border_style='cyan'))
+        tui.layout['Load'].update(Panel(tui.load, title='Process', border_style='cyan'))
 
         while p1.is_alive() or p2.is_alive():
 
@@ -89,52 +96,31 @@ if __name__ == '__main__':
 
                 msg1 = queue1.get()
 
-                tui.layout['uleft'].update(Panel(msg1, title='Scraper #1'))
+                tui.layout['uleft'].update(Panel(msg1, title='Website #1', border_style='cyan'))
 
             if not queue2.empty():
 
                 msg2 = queue2.get()
 
-                tui.layout['uright'].update(Panel(msg2, title='Scraper #2'))
+                tui.layout['uright'].update(Panel(msg2, title='Website #2', border_style='cyan'))
 
             if not queue3.empty():
 
                 msg3 = queue3.get()
 
-                tui.layout['lleft'].update(Panel(msg3, title='Scraper #3'))
+                tui.layout['lleft'].update(Panel(msg3, title='Website #3', border_style='cyan'))
 
             if not queue4.empty():
 
                 msg4 = queue4.get()
 
-                tui.layout['lcenter'].update(Panel(msg4, title='Scraper #4'))
+                tui.layout['lcenter'].update(Panel(msg4, title='Website #4', border_style='cyan'))
 
             if not queue5.empty():
 
                 msg5 = queue5.get()
 
-                tui.layout['lright'].update(Panel(msg5, title='Scraper #5'))
-
-            if not dqueue1.empty():
-
-                dmsg1 = dqueue1.get()
-                var = ''
-
-                var1 = dmsg1['Image Source']
-                var2 = dmsg1['Bookstore']
-                var3 = dmsg1['Place of Residence']
-                var4 = dmsg1['Books by Author']
-                var5 = dmsg1['Contact Source']
-
-                dic1 = (
-                        f'Image Source: {var1}\n'
-                        f'Bookstore: {var2}\n'
-                        f'Place of Residence: {var3}\n'
-                        f'Books by Author: {var4}\n'
-                        f'Contact Source: {var5}\n'
-                )
-
-                tui.layout['bleft'].update(Panel(tui.table, title='Load data'))
+                tui.layout['lright'].update(Panel(msg5, title='Website #5', border_style='cyan'))
 
             if not iqueue1.empty():
 
@@ -153,7 +139,7 @@ if __name__ == '__main__':
             if not iqueue3.empty():
 
                 imsg3 = iqueue3.get()
-                
+
                 tui.progress.update(prog3, total=100, completed=imsg3)
 
             if not iqueue4.empty():

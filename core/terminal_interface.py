@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
 from rich.layout import Layout
-from rich.console import Console
-from rich.table import Table
 from rich.progress import Progress, TextColumn, BarColumn, TaskProgressColumn, TimeRemainingColumn
+from rich.spinner import Spinner
 
 layout = Layout()
 
@@ -29,14 +28,18 @@ layout['lower2'].split_row(
     Layout(name='bright', ratio=3)
 )
 
-table = Table()
-
-table.add_column('Extracting')
-table.add_column('Place of Residence')
-table.add_column('Books By Author')
+layout['bleft'].split_column(
+    Layout(name='Extract'),
+    Layout(name='Transform'),
+    Layout(name='Load')
+)
 
 progress = Progress(
     TextColumn('[bold cyan]{task.description}'),
     BarColumn(bar_width=20),
     TaskProgressColumn(),
 )
+
+extract = Spinner('dots', text='[bold cyan]Extracting...')
+transform = Spinner('dots', text='[bold yellow]Transforming...')
+load = Spinner('dots', text='[bold green]Loading...')
