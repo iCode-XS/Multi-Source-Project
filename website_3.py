@@ -5,7 +5,7 @@ import time
 from loguru import logger
 import json
 import os
-from core import showman
+import pandas as pd
 
 # Defaults
 
@@ -104,7 +104,7 @@ def extraction(links_list, storage_list, session, queue3, dqueue3=None, iqueue3=
             cleaned_contact = contact_info.removeprefix('tel:')
 
         capture['Image Source'] = 'N/A'
-        capture['Bookstore'] = shop_name 
+        capture['Bookstore'] = shop_name
         capture['Place of Residence'] = 'N/A'
         capture['Books by Author'] = bba_link
         capture['Contact Source'] = cleaned_email
@@ -151,8 +151,9 @@ def extraction(links_list, storage_list, session, queue3, dqueue3=None, iqueue3=
 
         if conditional_iter == 10:
 
-            with open('website_3.json', 'a') as f:
-                json.dump(storage_list, f, indent=4)
+            with open('website_3.json', 'a', encoding='utf-8') as f:
+                for a in storage_list:
+                    f.write(json.dumps(a) + '\n')
 
             storage_list.clear()
             conditional_iter = 0
@@ -166,7 +167,7 @@ def extraction(links_list, storage_list, session, queue3, dqueue3=None, iqueue3=
         time_per_iter = round(end_time - start_time, 2)
 
 
-def scraper_3(queue3, dqueue3=None, iqueue3=None):
+def scraper_3(queue3, dqueue3=None, iqueue3=None, zqueue3=None):
 
     logger.remove()
 
@@ -189,13 +190,31 @@ def scraper_3(queue3, dqueue3=None, iqueue3=None):
 
     extract = extraction(all_websites, data, session, queue3, dqueue3, iqueue3)
 
+    if queue3:
+
+        queue3.put('Extraction success! Trying to save data into .csv file...')
+
+    zqueue3.put(0)
+
+    if os.path.exists('website_3.json'):
+
+        json_file = pd.read_json('website_3.json', lines=True)
+        df = pd.DataFrame(json_file)
+        df.to_csv('bookstore_listings.csv', index=False, mode='a', header=False)
+
+    zqueue3.put(20)
+
     logger.info('')
 
     logger.info('')
+
+    if queue3:
+
+        queue3.put('Success! Data has been successfully saved to .csv file...')
 
     session.close()
 
 
 if __name__ == '__main__':
 
-    scraper_3(None)
+    scraper_3(None, None)

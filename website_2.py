@@ -7,8 +7,7 @@ from loguru import logger
 import os
 import json
 import time
-from rich.panel import Panel
-
+import pandas as pd
 
 base_url = 'https://www.antiqbook.com'
 
@@ -156,9 +155,9 @@ def extraction(url_list, session, queue2, dqueue2=None, iqueue2=None):
 
         bba_url_logic = base_url + bba if bba_child1 else 'N/A'
 
-        capture['Books by Author'] = bba_url_logic
-
         capture['Place of Residence'] = por_cleaned
+
+        capture['Books by Author'] = bba_url_logic
 
         capture['Contact Source'] = cleaned_contact
 
@@ -213,9 +212,11 @@ def extraction(url_list, session, queue2, dqueue2=None, iqueue2=None):
 
         time_per_iter = round(end_time - start_time, 2)
 
-    with open('website_2.json', 'a') as f:
+        with open('website_2.json', 'a') as f: 
 
-        json.dump(data, f, indent=4)
+            for a in data:
+                f.write(json.dumps(a) + '\n')
+
         data.clear()
 
     global page_count
@@ -239,7 +240,7 @@ def pagination(session_name, next_url, url_list, queue2, dqueue2=None, iqueue2=N
         current_url = change_page(response)
 
 
-def scraper_2(queue2, dqueue2=None, iqueue2=None):
+def scraper_2(queue2, dqueue2=None, iqueue2=None, zqueue2=None):
 
     logger.remove()
 
@@ -266,8 +267,26 @@ def scraper_2(queue2, dqueue2=None, iqueue2=None):
 
     d = pagination(session, c, dealers_url, queue2, dqueue2, iqueue2)
 
+    if queue2:
+
+        queue2.put('Extraction Success! Trying to save data in .csv file...')
+
+    zqueue2.put(0)
+
+    if os.path.exists('website_2.json'):
+
+        json_file = pd.read_json('website_2.json', lines=True)
+        df = pd.DataFrame(json_file)
+        df.to_csv('bookstore_listings.csv', index=False, mode='a', header=False)
+
+    zqueue2.put(20)
+
+    if queue2:
+
+        queue2.put('Success! Data has been successfully saved to .csv file...')
+
     session.close()
 
 
 if __name__ == '__main__':
-    scraper_2(None)
+    scraper_2(None, None)

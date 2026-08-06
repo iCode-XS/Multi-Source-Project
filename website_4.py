@@ -4,7 +4,8 @@ from core import pipeline
 import time
 import json
 from loguru import logger
-from core import showman
+import pandas as pd
+import os
 
 # Defaults
 
@@ -82,7 +83,7 @@ def extraction(bs4_object, list_name, addr_list, queue4, dqueue4=None, iqueue4=N
         eta_in_mins = round(eta / 60, 1)
 
         eta_in_seconds = round(eta % 60, 2)
-        
+
         percent = int(current_iter / total_items * 100)
 
         if queue4:
@@ -110,6 +111,8 @@ def extraction(bs4_object, list_name, addr_list, queue4, dqueue4=None, iqueue4=N
 
             iqueue4.put(percent)
 
+        #print(percent)
+
         capture['Image Source'] = 'N/A'
 
         capture['Bookstore'] = title
@@ -135,7 +138,7 @@ def extraction(bs4_object, list_name, addr_list, queue4, dqueue4=None, iqueue4=N
         json.dump(list_name, f, indent=4)
 
 
-def scraper_4(queue4, dqueue4=None, iqueue4=None):
+def scraper_4(queue4, dqueue4=None, iqueue4=None, zqueue4=None):
 
     logger.remove()
 
@@ -151,6 +154,27 @@ def scraper_4(queue4, dqueue4=None, iqueue4=None):
 
     a = extraction(parsed, data, addr_list, queue4, dqueue4, iqueue4)
 
+    if queue4:
+
+        queue4.put('Extraction Success! Trying to save data into .csv file...')
+
+    zqueue4.put(0)
+
+    if os.path.exists('website_4.json'):
+
+        with open('website_4.json', 'r') as f:
+
+            json_file = json.load(f)
+            df = pd.DataFrame(json_file)
+            df.to_csv('bookstore_listings.csv', index=False, mode='a', header=False)
+
+    zqueue4.put(20)
+
+    if queue4:
+
+        queue4.put('Success! Data has been successfully saved into .csv file...')
+
+
 if __name__ == '__main__':
 
-    scraper_4(None)
+    scraper_4(None, None)

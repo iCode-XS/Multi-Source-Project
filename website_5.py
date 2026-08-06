@@ -3,8 +3,10 @@
 from core import pipeline
 import time
 import json
-from core import showman
 from loguru import logger
+import pandas as pd
+import os
+
 
 target_url = 'https://abac.org/en/members/'
 
@@ -118,7 +120,7 @@ def start(queue5, dqueue5=None, iqueue5=None):
         json.dump(data_list, f, indent=4)
 
 
-def scraper_5(queue5, dqueue5=None, iqueue5=None):
+def scraper_5(queue5, dqueue5=None, iqueue5=None, zqueue5=None):
 
     logger.remove()
 
@@ -130,7 +132,27 @@ def scraper_5(queue5, dqueue5=None, iqueue5=None):
 
     start(queue5, dqueue5, iqueue5)
 
+    if queue5:
+
+        queue5.put('Extraction Success! Trying to save data into .csv file...')
+
+    if os.path.exists('website_5.json'):
+
+        zqueue5.put(0)
+
+        with open('website_5.json', 'r') as f:
+
+            json_file = json.load(f)
+            df = pd.DataFrame(json_file)
+            df.to_csv('bookstore_listings.csv', index=False)
+
+        zqueue5.put(20)
+
+    if queue5:
+
+        queue5.put('Success! Data has been succesfully saved into .csv file...')
+
 
 if __name__ == '__main__':
 
-    scraper_5(None)
+    scraper_5(None, None)

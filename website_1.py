@@ -7,6 +7,8 @@ import time
 import json
 from loguru import logger
 from rich.panel import Panel
+import os
+import pandas as pd
 
 # Default Placeholders
 
@@ -139,6 +141,8 @@ def single_page(response_var, list_var, total_page, queue1, dqueue1, mqueue1=Non
         next_page_sibling = parsed.find('i', class_='fa fa-arrow-right')
         next_page_link = next_page_sibling.parent['href'] if next_page_sibling else None
 
+        capture['Address'] = 'N/A'
+
         list_var.append(capture)
 
         global items_left_per_iter
@@ -157,13 +161,7 @@ def single_page(response_var, list_var, total_page, queue1, dqueue1, mqueue1=Non
 
         second = round(seconds % 60, 2)
 
-        global percent_count
-
-
-        if counting == one_percent:
-
-            percent_count += 1
-            one_percent = counting + counting
+        percent = int(counting / final_total_pages * 100)
 
         if queue1:
             queue1.put(
@@ -174,8 +172,8 @@ def single_page(response_var, list_var, total_page, queue1, dqueue1, mqueue1=Non
         else:
             print(f'Current URL: {working_url}')
             print(f'Extracting item: {current_item}')
-            print(f'Percentage Calculation: {one_percent} - {counting}')
-            print(f'Percentage: {percent_count}')
+            print(f'Percentage Calculation: {items_left_per_iter} - {final_total_pages}')
+            print(f'Percentage: {percent}')
             print()
 
         if dqueue1:
@@ -188,7 +186,7 @@ def single_page(response_var, list_var, total_page, queue1, dqueue1, mqueue1=Non
             squeue1.put(seconds)
 
         if iqueue1:
-            iqueue1.put(percent_count)
+            iqueue1.put(percent)
 
 
         time.sleep(0.2)
@@ -235,11 +233,13 @@ def multi_page(single_page_var, total_page, init, queue1, dqueue1, mqueue1, sque
 
         with open('website_1.json', 'a') as f:
 
-            json.dump(data, f, indent=4)
+            for a in data:
+                f.write(json.dumps(a) + '\n')
+
             data.clear()
 
 
-def scraper_1(queue1, dqueue1, mqueue1=None, squeue1=None, iqueue1=None):
+def scraper_1(queue1, dqueue1, mqueue1=None, squeue1=None, iqueue1=None, zqueue1=None):
 
     logger.remove()
 
@@ -262,12 +262,35 @@ def scraper_1(queue1, dqueue1, mqueue1=None, squeue1=None, iqueue1=None):
 
     page_1 = single_page(website, data, total_pages, queue1, dqueue1, mqueue1, squeue1, iqueue1)
 
+    if zqueue1:
+        zqueue1.put(0)
+
     with open('website_1.json', 'w') as f:
 
-        json.dump(data, f, indent=4)
+        for x in data:
+
+            f.write(json.dumps(x) + '\n')
+
         data.clear()
 
     multi_page(page_1, total_pages, init, queue1, dqueue1, mqueue1, squeue1, iqueue1)
+
+    if queue1:
+        queue1.put('Extraction Success! Trying to save data into .csv file...')
+
+    if os.path.exists('website_1.json'):
+
+        json_file = pd.read_json('website_1.json', lines=True)
+
+        df = pd.DataFrame(json_file)
+
+        df.to_csv('bookstore_listings.csv', index=False, header=False, mode='a')
+
+    if zqueue1.put:
+        zqueue1.put(20)
+
+    if queue1:
+        queue1.put('Succes! Data has been successfully saved into .csv file...')
 
     init.close()
 
