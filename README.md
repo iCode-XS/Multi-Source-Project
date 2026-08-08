@@ -4,6 +4,10 @@ A project which is extracting data from 5 websites on the internet and saving it
 
 This project is running 5 extraction engines at once - by utilizing the cores of my cpu, with the help of multiprocessing.
 
+You can access the links to the websites down below:
+
+[Website #1](https://www.boekwinkeltjes.nl/w/list/page/1/) | [Website #2](https://www.antiqbook.com/dealers) | [Website #3](https://www.pbfa.org/shops) | [Website #4](https://www.ioba.org/members-directory) | [Website #5](https://abac.org/en/members/)
+
 ### Target Data
 
 The information that I am extracting from the sites:
@@ -22,7 +26,7 @@ The information that I am extracting from the sites:
 
 <br>
 
-You can check how the data looks like on the website by clicking below:
+You can check how the data looks like on those websites by clicking below:
 
 <details>
   <summary><b>Click here for Target Data</b></summary>
