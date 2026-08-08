@@ -4,10 +4,6 @@ A project which is extracting data from 5 websites on the internet and saving it
 
 This project is running 5 extraction engines at once - by utilizing the cores of my cpu, with the help of multiprocessing.
 
-You can access the links to the websites down below:
-
-[Website #1](https://www.boekwinkeltjes.nl/w/list/page/1/) | [Website #2](https://www.antiqbook.com/dealers) | [Website #3](https://www.pbfa.org/shops) | [Website #4](https://www.ioba.org/members-directory) | [Website #5](https://abac.org/en/members/)
-
 ### Target Data
 
 The information that I am extracting from the sites:
@@ -45,6 +41,10 @@ https://github.com/user-attachments/assets/5471449e-db0c-427c-b022-3075a2077a2c
 You can check a sample of spreadsheet created during the full run of this project, right here:
 
 [Preview File](https://www.dropbox.com/scl/fi/vk3jzv9bi46tr334u7fhq/bookstore_listings.csv?rlkey=e9pd1rbazsqyrbr8tl4x4i4bk&st=7085j92b&dl=0) | [Download](https://www.dropbox.com/scl/fi/vk3jzv9bi46tr334u7fhq/bookstore_listings.csv?rlkey=e9pd1rbazsqyrbr8tl4x4i4bk&st=7085j92b&dl=1) 
+
+You can access the links to the websites down below:
+
+[Website #1](https://www.boekwinkeltjes.nl/w/list/page/1/) | [Website #2](https://www.antiqbook.com/dealers) | [Website #3](https://www.pbfa.org/shops) | [Website #4](https://www.ioba.org/members-directory) | [Website #5](https://abac.org/en/members/)
 
 
 
