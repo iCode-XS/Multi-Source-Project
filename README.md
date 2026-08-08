@@ -36,7 +36,7 @@ You can check how the data looks like on the website by clicking below:
 
 ### Demo
 
-https://github.com/user-attachments/assets/d3168cf3-abd6-490e-bb62-4a637218d194
+https://github.com/user-attachments/assets/5471449e-db0c-427c-b022-3075a2077a2c
 
 You can check the sample of spreadsheet created during the full run of this project, right here:
 
