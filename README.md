@@ -6,7 +6,7 @@ This project is running 5 extraction engines at once - by utilizing the cores of
 
 ### Target Data
 
-The information that I am extracting from the site:
+The information that I am extracting from the sites:
 
 * Image Source
 
@@ -38,7 +38,7 @@ You can check how the data looks like on the website by clicking below:
 
 https://github.com/user-attachments/assets/5471449e-db0c-427c-b022-3075a2077a2c
 
-You can check the sample of spreadsheet created during the full run of this project, right here:
+You can check a sample of spreadsheet created during the full run of this project, right here:
 
 [Preview File](https://www.dropbox.com/scl/fi/vk3jzv9bi46tr334u7fhq/bookstore_listings.csv?rlkey=e9pd1rbazsqyrbr8tl4x4i4bk&st=7085j92b&dl=0) | [Download](https://www.dropbox.com/scl/fi/vk3jzv9bi46tr334u7fhq/bookstore_listings.csv?rlkey=e9pd1rbazsqyrbr8tl4x4i4bk&st=7085j92b&dl=1) 
 
