@@ -118,8 +118,8 @@ Screenshots from website.com/robots.txt page are given below:
 
 * pandas: for creating the .csv file using json files
 
-> loguru: for logging and monitoring the entire process in the backgound
+* loguru: for logging and monitoring the entire process in the backgound
 
-> rich: for providing the terminal user interface
+* rich: for providing the terminal user interface
 
-> multiprocessing: for using my cpu cores to fire all extraction engines - at the same time
+* multiprocessing: for using my cpu cores to fire all extraction engines - at the same time
