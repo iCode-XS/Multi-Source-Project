@@ -106,17 +106,17 @@ Screenshots from website.com/robots.txt page are given below:
 
 ### Tech Stack
 
-> python: the language I am using
+* python: the language I am using
 
-> httpx: for fetching the html page from the internet
+* httpx: for fetching the html page from the internet
 
-> beautifulSoup4: for creating a Document Object Model(DOM) of the HTML tags
+* beautifulSoup4: for creating a Document Object Model(DOM) of the HTML tags
 
-> lxml parser: for parsing with speed - Written in C
+* lxml parser: for parsing with speed - Written in C
 
-> json: for storing data in the extraction phase and taking load off from the RAM
+* json: for storing data in the extraction phase and taking load off from the RAM
 
-> pandas: for creating the .csv file using json files
+* pandas: for creating the .csv file using json files
 
 > loguru: for logging and monitoring the entire process in the backgound
 
